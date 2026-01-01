@@ -279,6 +279,28 @@ kubectl describe ingress ecommerce-ingress -n ecommerce
 kubectl logs -n kube-system deployment/aws-load-balancer-controller
 ```
 
+## Agile Sprint Planning
+
+This project follows Agile methodology with 2-week sprints. We have comprehensive sprint planning to guide the development and deployment process.
+
+### Sprint Documentation
+- **[SPRINTS.md](SPRINTS.md)** - Detailed sprint planning for all 6 sprints (Weeks 1-12)
+- **[BACKLOG.md](BACKLOG.md)** - Product backlog with user stories and priorities
+- **[AGILE_GUIDE.md](AGILE_GUIDE.md)** - Quick reference guide for Agile ceremonies and processes
+- **Sprint Tracking** - Individual sprint files in `.github/sprints/`
+
+### Sprint Overview
+1. **Sprint 1** (Weeks 1-2): Foundation & Infrastructure Setup
+2. **Sprint 2** (Weeks 3-4): Microservices Development
+3. **Sprint 3** (Weeks 5-6): Kubernetes Configuration & Database Setup
+4. **Sprint 4** (Weeks 7-8): Deployment & Integration Testing
+5. **Sprint 5** (Weeks 9-10): Security, Optimization & Production Readiness
+6. **Sprint 6** (Weeks 11-12): CI/CD Pipeline & Automation
+
+**Total Story Points**: 209 SP across 6 sprints
+
+For detailed sprint information, user stories, and tasks, see [SPRINTS.md](SPRINTS.md).
+
 ## Future Enhancements
 
 - Add Redis for caching
