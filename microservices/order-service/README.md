@@ -145,8 +145,7 @@ python app.py
 ### Run with Flask Development Server
 ```bash
 export FLASK_APP=app.py
-export FLASK_ENV=development
-flask run --port 3004
+flask run --port 3004 --debug
 ```
 
 ## Docker
