@@ -233,11 +233,13 @@ kubectl autoscale deployment product-service --cpu-percent=70 --min=2 --max=10 -
 
 ## Security Considerations
 
-1. **Update Secrets**: Change the default JWT secret and MongoDB password in `k8s/configmaps/app-secrets.yaml`
+1. **Update Secrets**: Change the default JWT secret and MongoDB password in `k8s/databases/mongodb.yaml` and `k8s/configmaps/app-secrets.yaml`
 2. **Network Policies**: Implement network policies to restrict pod-to-pod communication
 3. **RBAC**: Configure proper role-based access control
-4. **TLS**: Add TLS certificates to the Ingress for HTTPS
+4. **TLS**: Add TLS certificates to the Ingress for HTTPS (see ingress.yaml comments)
 5. **Image Scanning**: Scan Docker images for vulnerabilities before deployment
+6. **Rate Limiting**: Add rate limiting middleware (e.g., express-rate-limit for Node.js) to prevent abuse
+7. **Input Validation**: Add comprehensive input validation for all API endpoints
 
 ## Clean Up
 
