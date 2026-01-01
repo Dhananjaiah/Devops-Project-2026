@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - ecommerce-network
+
+  product-service:
+    build: ./microservices/product-service
+    container_name: product-service
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      MONGO_URL: mongodb://mongodb:27017
+    depends_on:
+      - mongodb
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  user-service:
+    build: ./microservices/user-service
+    container_name: user-service
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      MONGO_URL: mongodb://mongodb:27017
+      SECRET_KEY: your-secret-key-for-local-dev
+    depends_on:
+      - mongodb
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  cart-service:
+    build: ./microservices/cart-service
+    container_name: cart-service
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      MONGO_URL: mongodb://mongodb:27017
+      PRODUCT_SERVICE_URL: http://product-service:3001
+    depends_on:
+      - mongodb
+      - product-service
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  order-service:
+    build: ./microservices/order-service
+    container_name: order-service
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: 3004
+      MONGO_URL: mongodb://mongodb:27017
+      CART_SERVICE_URL: http://cart-service:3003
+      PRODUCT_SERVICE_URL: http://product-service:3001
+    depends_on:
+      - mongodb
+      - cart-service
+      - product-service
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+networks:
+  ecommerce-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
