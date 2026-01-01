@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
+from bson import ObjectId
 import os
 import bcrypt
 import jwt
@@ -100,11 +101,16 @@ def get_profile():
         if not auth_header:
             return jsonify({'error': 'No authorization header'}), 401
         
-        token = auth_header.split(' ')[1]
+        # Validate Bearer token format
+        parts = auth_header.split(' ')
+        if len(parts) != 2 or parts[0] != 'Bearer':
+            return jsonify({'error': 'Invalid authorization header format'}), 401
+        
+        token = parts[1]
         
         # Verify token
         payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        user = db.users.find_one({'_id': payload['user_id']})
+        user = db.users.find_one({'_id': ObjectId(payload['user_id'])})
         
         if not user:
             return jsonify({'error': 'User not found'}), 404

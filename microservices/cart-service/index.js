@@ -49,7 +49,7 @@ app.post('/api/cart/:userId/items', async (req, res) => {
     
     // Verify product exists
     try {
-      await axios.get(`${PRODUCT_SERVICE_URL}/api/products/${productId}`);
+      await axios.get(`${PRODUCT_SERVICE_URL}/api/products/${productId}`, { timeout: 5000 });
     } catch (err) {
       return res.status(404).json({ error: 'Product not found' });
     }

@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
+from bson import ObjectId
 import os
 import requests
 from datetime import datetime
@@ -38,7 +39,7 @@ def get_orders():
 @app.route('/api/orders/<order_id>', methods=['GET'])
 def get_order(order_id):
     try:
-        order = db.orders.find_one({'_id': order_id})
+        order = db.orders.find_one({'_id': ObjectId(order_id)})
         if not order:
             return jsonify({'error': 'Order not found'}), 404
         
@@ -57,7 +58,7 @@ def create_order():
             return jsonify({'error': 'User ID required'}), 400
         
         # Get cart from cart service
-        cart_response = requests.get(f'{CART_SERVICE_URL}/api/cart/{user_id}')
+        cart_response = requests.get(f'{CART_SERVICE_URL}/api/cart/{user_id}', timeout=5)
         if cart_response.status_code != 200:
             return jsonify({'error': 'Failed to get cart'}), 500
         
@@ -71,20 +72,26 @@ def create_order():
         total = 0
         
         for item in cart['items']:
-            product_response = requests.get(
-                f'{PRODUCT_SERVICE_URL}/api/products/{item["productId"]}'
-            )
-            if product_response.status_code == 200:
-                product = product_response.json()
-                item_total = product.get('price', 0) * item['quantity']
-                items_with_details.append({
-                    'productId': item['productId'],
-                    'productName': product.get('name', 'Unknown'),
-                    'quantity': item['quantity'],
-                    'price': product.get('price', 0),
-                    'subtotal': item_total
-                })
-                total += item_total
+            try:
+                product_response = requests.get(
+                    f'{PRODUCT_SERVICE_URL}/api/products/{item["productId"]}',
+                    timeout=5
+                )
+                if product_response.status_code == 200:
+                    product = product_response.json()
+                    item_total = product.get('price', 0) * item['quantity']
+                    items_with_details.append({
+                        'productId': item['productId'],
+                        'productName': product.get('name', 'Unknown'),
+                        'quantity': item['quantity'],
+                        'price': product.get('price', 0),
+                        'subtotal': item_total
+                    })
+                    total += item_total
+                else:
+                    return jsonify({'error': f'Product {item["productId"]} not available'}), 400
+            except requests.RequestException as e:
+                return jsonify({'error': f'Failed to fetch product details: {str(e)}'}), 500
         
         # Create order
         order = {
@@ -102,8 +109,8 @@ def create_order():
         
         # Clear cart after order
         try:
-            requests.delete(f'{CART_SERVICE_URL}/api/cart/{user_id}')
-        except:
+            requests.delete(f'{CART_SERVICE_URL}/api/cart/{user_id}', timeout=5)
+        except requests.RequestException:
             pass  # Don't fail order if cart clear fails
         
         return jsonify(order), 201
@@ -124,14 +131,14 @@ def update_order_status(order_id):
             return jsonify({'error': f'Invalid status. Must be one of: {valid_statuses}'}), 400
         
         result = db.orders.update_one(
-            {'_id': order_id},
+            {'_id': ObjectId(order_id)},
             {'$set': {'status': new_status, 'updatedAt': datetime.utcnow()}}
         )
         
         if result.matched_count == 0:
             return jsonify({'error': 'Order not found'}), 404
         
-        order = db.orders.find_one({'_id': order_id})
+        order = db.orders.find_one({'_id': ObjectId(order_id)})
         order['_id'] = str(order['_id'])
         return jsonify(order)
     except Exception as e:
@@ -141,7 +148,7 @@ def update_order_status(order_id):
 def cancel_order(order_id):
     try:
         result = db.orders.update_one(
-            {'_id': order_id},
+            {'_id': ObjectId(order_id)},
             {'$set': {'status': 'cancelled', 'updatedAt': datetime.utcnow()}}
         )
         
