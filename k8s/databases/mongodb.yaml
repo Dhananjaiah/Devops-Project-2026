@@ -8,8 +8,8 @@ data:
   # Base64 encoded values - Change these in production!
   # username: "admin" (base64)
   username: YWRtaW4=
-  # password: "changeme-secure-password" (base64)
-  password: Y2hhbmdlbWUtc2VjdXJlLXBhc3N3b3Jk
+  # password: "password123" (base64)
+  password: cGFzc3dvcmQxMjM=
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -22,7 +22,6 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: gp2
 ---
 apiVersion: apps/v1
 kind: Deployment

@@ -25,7 +25,10 @@ spec:
         - name: PORT
           value: "3004"
         - name: MONGO_URL
-          value: "mongodb://mongodb:27017"
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-connection
+              key: mongo-url
         - name: CART_SERVICE_URL
           value: "http://cart-service:3003"
         - name: PRODUCT_SERVICE_URL
@@ -45,7 +48,8 @@ spec:
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /health
+            path: /ready
             port: 3004
           initialDelaySeconds: 10
+          timeoutSeconds: 2
           periodSeconds: 5

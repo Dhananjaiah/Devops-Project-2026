@@ -48,7 +48,7 @@ This document contains the prioritized product backlog for the E-Commerce Micros
 - [x] US-3.2: Kubernetes Namespace & ConfigMaps (3 SP)
 - [x] US-3.3: Service Deployments (8 SP)
 - [x] US-3.4: Kubernetes Services (5 SP)
-- [x] US-3.5: Ingress Configuration (8 SP)
+- [x] US-3.5: Gateway API Configuration (8 SP)
 
 **Total Story Points**: 29
 

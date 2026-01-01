@@ -27,7 +27,7 @@ The E-Commerce Microservices project has successfully delivered a **complete, wo
 3. **Kubernetes Deployment** (Sprint 3)
    - 13 Kubernetes manifests
    - High availability (2 replicas per service)
-   - Ingress with ALB
+   - Gateway API routing (Ingress deprecated)
    - ConfigMaps and Secrets
    - MongoDB with persistent storage
 
@@ -126,7 +126,7 @@ The E-Commerce Microservices project has successfully delivered a **complete, wo
   - Liveness and readiness probes
   - 2 replicas per service for HA
 - **Services**: 4 ClusterIP services in `k8s/services/`
-- **Ingress**: ALB Ingress with path-based routing
+- **Gateway**: Gateway API with path-based routing
 - **Database**: MongoDB StatefulSet with persistent storage
 - **ConfigMaps**: Application configuration and secrets
 

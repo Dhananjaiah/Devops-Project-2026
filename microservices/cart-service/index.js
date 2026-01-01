@@ -31,13 +31,51 @@ app.use('/api/', limiter);
 
 let db;
 
+let mongoClient;
+let connectInFlight;
+
+const connectToMongo = async () => {
+  if (process.env.NODE_ENV === 'test') {
+    return null;
+  }
+
+  if (db) {
+    return db;
+  }
+
+  if (!mongoClient) {
+    mongoClient = new MongoClient(MONGO_URL, { serverSelectionTimeoutMS: 2000 });
+  }
+
+  if (connectInFlight) {
+    return connectInFlight;
+  }
+
+  connectInFlight = mongoClient
+    .connect()
+    .then(() => {
+      db = mongoClient.db(DB_NAME);
+      console.log('Connected to MongoDB');
+      return db;
+    })
+    .catch((err) => {
+      console.error('MongoDB connection error:', err);
+
+      setTimeout(() => {
+        connectInFlight = null;
+        connectToMongo().catch(() => {});
+      }, 2000);
+
+      throw err;
+    });
+
+  return connectInFlight;
+};
+
 // Connect to MongoDB
-MongoClient.connect(MONGO_URL)
-  .then(client => {
-    db = client.db(DB_NAME);
-    console.log('Connected to MongoDB');
-  })
-  .catch(err => console.error('MongoDB connection error:', err));
+if (process.env.NODE_ENV !== 'test') {
+  connectToMongo().catch(() => {});
+}
 
 // Validation middleware
 const validateUserId = [
@@ -69,6 +107,18 @@ const handleValidationErrors = (req, res, next) => {
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', service: 'cart-service' });
+});
+
+// Readiness check endpoint (dependency-aware)
+app.get('/ready', async (req, res) => {
+  try {
+    await connectToMongo();
+    if (!db) return res.status(503).json({ status: 'not-ready', service: 'cart-service' });
+    await db.command({ ping: 1 });
+    return res.json({ status: 'ready', service: 'cart-service' });
+  } catch (_err) {
+    return res.status(503).json({ status: 'not-ready', service: 'cart-service' });
+  }
 });
 
 // Get cart by user ID
@@ -189,6 +239,10 @@ app.delete('/api/cart/:userId', validateUserId, handleValidationErrors, async (r
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Cart service listening on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Cart service listening on port ${PORT}`);
+  });
+}
+
+module.exports = app;

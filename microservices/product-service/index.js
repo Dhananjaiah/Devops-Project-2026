@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 const rateLimit = require('express-rate-limit');
 const { body, param, validationResult } = require('express-validator');
 const helmet = require('helmet');
@@ -29,13 +29,51 @@ app.use('/api/', limiter);
 
 let db;
 
+let mongoClient;
+let connectInFlight;
+
+const connectToMongo = async () => {
+  if (process.env.NODE_ENV === 'test') {
+    return null;
+  }
+
+  if (db) {
+    return db;
+  }
+
+  if (!mongoClient) {
+    mongoClient = new MongoClient(MONGO_URL, { serverSelectionTimeoutMS: 2000 });
+  }
+
+  if (connectInFlight) {
+    return connectInFlight;
+  }
+
+  connectInFlight = mongoClient
+    .connect()
+    .then(() => {
+      db = mongoClient.db(DB_NAME);
+      console.log('Connected to MongoDB');
+      return db;
+    })
+    .catch((err) => {
+      console.error('MongoDB connection error:', err);
+
+      setTimeout(() => {
+        connectInFlight = null;
+        connectToMongo().catch(() => {});
+      }, 2000);
+
+      throw err;
+    });
+
+  return connectInFlight;
+};
+
 // Connect to MongoDB
-MongoClient.connect(MONGO_URL)
-  .then(client => {
-    db = client.db(DB_NAME);
-    console.log('Connected to MongoDB');
-  })
-  .catch(err => console.error('MongoDB connection error:', err));
+if (process.env.NODE_ENV !== 'test') {
+  connectToMongo().catch(() => {});
+}
 
 // Validation middleware
 const validateProduct = [
@@ -48,7 +86,12 @@ const validateProduct = [
 ];
 
 const validateProductId = [
-  param('id').trim().isLength({ min: 1, max: 100 }).withMessage('Invalid product ID'),
+  param('id')
+    .trim()
+    .isLength({ min: 24, max: 24 })
+    .withMessage('Invalid product ID')
+    .isHexadecimal()
+    .withMessage('Invalid product ID'),
 ];
 
 // Error handling middleware for validation
@@ -65,6 +108,18 @@ app.get('/health', (req, res) => {
   res.json({ status: 'healthy', service: 'product-service' });
 });
 
+// Readiness check endpoint (dependency-aware)
+app.get('/ready', async (req, res) => {
+  try {
+    await connectToMongo();
+    if (!db) return res.status(503).json({ status: 'not-ready', service: 'product-service' });
+    await db.command({ ping: 1 });
+    return res.json({ status: 'ready', service: 'product-service' });
+  } catch (_err) {
+    return res.status(503).json({ status: 'not-ready', service: 'product-service' });
+  }
+});
+
 // Get all products
 app.get('/api/products', async (req, res) => {
   try {
@@ -72,11 +127,18 @@ app.get('/api/products', async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
     const skip = (page - 1) * limit;
 
-    const products = await db.collection('products')
+    const products = await db
+      .collection('products')
       .find({})
       .skip(skip)
       .limit(limit)
       .toArray();
+
+    for (const product of products) {
+      if (product && product._id) {
+        product._id = product._id.toString();
+      }
+    }
     
     const total = await db.collection('products').countDocuments();
     
@@ -97,10 +159,13 @@ app.get('/api/products', async (req, res) => {
 // Get product by ID
 app.get('/api/products/:id', validateProductId, handleValidationErrors, async (req, res) => {
   try {
-    const product = await db.collection('products').findOne({ _id: req.params.id });
+    const product = await db
+      .collection('products')
+      .findOne({ _id: new ObjectId(req.params.id) });
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
+    product._id = product._id.toString();
     res.json(product);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -112,7 +177,7 @@ app.post('/api/products', validateProduct, handleValidationErrors, async (req, r
   try {
     const product = req.body;
     const result = await db.collection('products').insertOne(product);
-    res.status(201).json({ id: result.insertedId, ...product });
+    res.status(201).json({ id: result.insertedId.toString(), ...product });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -122,7 +187,7 @@ app.post('/api/products', validateProduct, handleValidationErrors, async (req, r
 app.put('/api/products/:id', validateProductId, validateProduct, handleValidationErrors, async (req, res) => {
   try {
     const result = await db.collection('products').updateOne(
-      { _id: req.params.id },
+      { _id: new ObjectId(req.params.id) },
       { $set: req.body }
     );
     if (result.matchedCount === 0) {
@@ -137,7 +202,7 @@ app.put('/api/products/:id', validateProductId, validateProduct, handleValidatio
 // Delete product
 app.delete('/api/products/:id', validateProductId, handleValidationErrors, async (req, res) => {
   try {
-    const result = await db.collection('products').deleteOne({ _id: req.params.id });
+    const result = await db.collection('products').deleteOne({ _id: new ObjectId(req.params.id) });
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: 'Product not found' });
     }
@@ -147,6 +212,10 @@ app.delete('/api/products/:id', validateProductId, handleValidationErrors, async
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Product service listening on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Product service listening on port ${PORT}`);
+  });
+}
+
+module.exports = app;

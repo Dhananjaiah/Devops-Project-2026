@@ -31,6 +31,7 @@ This will start:
 - User Service on port 3002
 - Cart Service on port 3003
 - Order Service on port 3004
+- UI (React, served by Node) on port 8080
 
 ### 3. Wait for Services to Start (30 seconds)
 ```bash
@@ -39,6 +40,17 @@ docker-compose ps
 ```
 
 ### 4. Test the Application
+
+#### Course demo (recommended)
+Run the full end-to-end journey script:
+```bash
+bash scripts/demo.sh
+```
+
+Or run the same flow via the Make target:
+```bash
+make test
+```
 
 #### Health Checks
 ```bash
@@ -53,6 +65,9 @@ curl http://localhost:3003/health
 
 # Test Order Service
 curl http://localhost:3004/health
+
+# UI (served by Node)
+curl -I http://localhost:8080/
 ```
 
 #### Complete User Journey Test

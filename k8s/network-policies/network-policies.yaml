@@ -22,9 +22,12 @@ spec:
     - podSelector:
         matchLabels:
           app: order-service
-    - podSelector:
+    # Allow traffic from an external Gateway implementation namespace.
+    # Label your gateway namespace like:
+    # kubectl label namespace <gateway-namespace> ecommerce.dev/gateway-access=true
+    - namespaceSelector:
         matchLabels:
-          app: ingress-controller
+          ecommerce.dev/gateway-access: "true"
     ports:
     - protocol: TCP
       port: 3001
@@ -59,9 +62,9 @@ spec:
   ingress:
   # Allow traffic from ingress controller
   - from:
-    - podSelector:
+    - namespaceSelector:
         matchLabels:
-          app: ingress-controller
+          ecommerce.dev/gateway-access: "true"
     ports:
     - protocol: TCP
       port: 3002
@@ -99,9 +102,9 @@ spec:
     - podSelector:
         matchLabels:
           app: order-service
-    - podSelector:
+    - namespaceSelector:
         matchLabels:
-          app: ingress-controller
+          ecommerce.dev/gateway-access: "true"
     ports:
     - protocol: TCP
       port: 3003
@@ -144,9 +147,9 @@ spec:
   ingress:
   # Allow traffic from ingress controller
   - from:
-    - podSelector:
+    - namespaceSelector:
         matchLabels:
-          app: ingress-controller
+          ecommerce.dev/gateway-access: "true"
     ports:
     - protocol: TCP
       port: 3004

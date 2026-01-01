@@ -1,3 +1,9 @@
+## DEPRECATED (course update)
+##
+## This repo now prefers Kubernetes Gateway API for north-south routing.
+## Keep this file only as a historical reference for ALB Ingress usage.
+## See: k8s/gateway/gateway.yaml
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

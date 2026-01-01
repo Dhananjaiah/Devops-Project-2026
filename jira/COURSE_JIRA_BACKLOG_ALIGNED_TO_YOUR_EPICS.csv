@@ -1,0 +1,58 @@
+Issue Type,Summary,Description,Epic Name,Epic Link,Sprint,Story Points,Components,Labels
+Epic,"Epic 1: Course Foundation: Repos, Standards, and Trunk-Based Workflow","Course foundation: standards, workflow, protections, docs.","Epic 1: Course Foundation: Repos, Standards, and Trunk-Based Workflow",,Sprint 1,,,dev,course
+Epic,"Epic 2: Terraform Bootstrap: Remote State + IAM + GitHub OIDC","Remote state + OIDC auth for pipelines.","Epic 2: Terraform Bootstrap: Remote State + IAM + GitHub OIDC",,Sprint 5,,,terraform,course
+Epic,"Epic 4: EKS Cluster Baseline: Managed Node Groups + Autoscaling + Required Add-ons","EKS baseline provisioning + add-ons.","Epic 4: EKS Cluster Baseline: Managed Node Groups + Autoscaling + Required Add-ons",,Sprint 5,,,k8s,course
+Epic,"Epic 5: Gateway API + Domain: ALB + TLS","Gateway API routing + TLS/HTTPS.","Epic 5: Gateway API + Domain: ALB + TLS",,Sprint 6,,,k8s,course
+Epic,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)","GitOps-driven deployments with ArgoCD + App-of-Apps; dev auto-sync and controlled prod promotion.","Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",,Sprint 4,,,gitops,course
+Epic,"Epic 7: Observability: Prometheus + Grafana (+ Loki optional)","Metrics and dashboards that work for real.","Epic 7: Observability: Prometheus + Grafana (+ Loki optional)",,Sprint 6,,,ops,course
+Epic,"Epic 8: Walking Skeleton App: Services + UI","App layer: microservices + React UI + Node host.","Epic 8: Walking Skeleton App: Services + UI",,Sprint 3,,,app,course
+Epic,"Epic 9: CI/CD","Per-service CI and staged CD to EKS.","Epic 9: CI/CD",,Sprint 5,,,cicd,course
+Epic,"Epic 10: Automation: One-command Up/Down","Optional automation for platform bring-up/tear-down.","Epic 10: Automation: One-command Up/Down",,Sprint 6,,,ops,course
+
+Story,"ST-1 Local runbook + demo script","AC: one command start/stop; repeatable journey demo; evidence checklist.",,"Epic 1: Course Foundation: Repos, Standards, and Trunk-Based Workflow",Sprint 1,5,docs,"course,sprint-1"
+Task,"TASK ST-1.1 Add demo script skeleton","Create a demo script that runs health + journey calls.",,"Epic 1: Course Foundation: Repos, Standards, and Trunk-Based Workflow",Sprint 1,2,docs,"course,sprint-1"
+Task,"TASK ST-1.2 Tighten Quickstart for course","Quickstart becomes the single source of truth.",,"Epic 1: Course Foundation: Repos, Standards, and Trunk-Based Workflow",Sprint 1,1,docs,"course,sprint-1"
+Task,"TASK ST-1.3 Add demo evidence template","Template for screenshots + expected outputs.",,"Epic 1: Course Foundation: Repos, Standards, and Trunk-Based Workflow",Sprint 1,2,docs,"course,sprint-1"
+
+Story,"ST-2 Make CI honest (remove default skipping)","AC: CI fails when lint/tests not configured; no masking.",,"Epic 9: CI/CD",Sprint 1,5,cicd,"course,sprint-1"
+Task,"TASK ST-2.1 Minimal lint/test baseline per service","Node: eslint + baseline tests; Python: pytest baseline.",,"Epic 9: CI/CD",Sprint 1,2,cicd,"course,sprint-1"
+Task,"TASK ST-2.2 Update ci.yaml gates","Remove 'echo skipping' behavior.",,"Epic 9: CI/CD",Sprint 1,3,cicd,"course,sprint-1"
+
+Story,"ST-4 Mongo auth consistency (compose + k8s)","AC: services connect with creds via env/secrets in both envs.",,"Epic 8: Walking Skeleton App: Services + UI",Sprint 2,8,backend,"course,sprint-2"
+Story,"ST-5 Dependency-aware readiness (DB)","AC: readiness fails if Mongo unavailable; no early traffic.",,"Epic 8: Walking Skeleton App: Services + UI",Sprint 2,5,backend,"course,sprint-2"
+Story,"ST-6 Fix product ID correctness end-to-end","AC: create→fetch by id→cart→order works reliably.",,"Epic 8: Walking Skeleton App: Services + UI",Sprint 2,5,backend,"course,sprint-2"
+
+Story,"ST-7 React UI (Vite) MVP","AC: products/auth/cart/orders; full journey in UI.",,"Epic 8: Walking Skeleton App: Services + UI",Sprint 3,13,frontend,"course,sprint-3"
+Story,"ST-8 Node-based UI hosting service","AC: Node/Express serves built SPA + client routing.",,"Epic 8: Walking Skeleton App: Services + UI",Sprint 3,5,frontend,"course,sprint-3"
+Story,"ST-9 Wire UI into docker-compose","AC: one command brings up UI + APIs.",,"Epic 8: Walking Skeleton App: Services + UI",Sprint 3,3,dev,"course,sprint-3"
+
+Story,"ST-10 Local Kubernetes overlay (kind/minikube)","AC: local k8s works end-to-end with docs.",,"Epic 4: EKS Cluster Baseline: Managed Node Groups + Autoscaling + Required Add-ons",Sprint 4,13,k8s,"course,sprint-4"
+Story,"ST-11 Gateway routing UI + APIs","AC: UI at / and APIs at /api/* through one host.",,"Epic 5: Gateway API + Domain: ALB + TLS",Sprint 4,5,k8s,"course,sprint-4"
+Story,"ST-12 Network policies match gateway reality","AC: policies allow gateway traffic correctly.",,"Epic 4: EKS Cluster Baseline: Managed Node Groups + Autoscaling + Required Add-ons",Sprint 4,3,k8s,"course,sprint-4"
+
+Story,"ST-19 Install ArgoCD (local k8s)","AC: ArgoCD installed in argocd namespace; UI reachable; install is reproducible (official manifests recommended) and documented.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 4,5,gitops,"course,sprint-4"
+Task,"TASK ST-19.1 Add ArgoCD install method + doc","Install ArgoCD via official manifests (version pinned) and document steps for kind/minikube.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 4,2,gitops,"course,sprint-4"
+Task,"TASK ST-19.2 Expose ArgoCD UI for course demo","Port-forward (preferred for local); document access and admin secret handling.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 4,3,gitops,"course,sprint-4"
+
+Story,"ST-20 GitOps repo structure + App-of-Apps bootstrap","AC: Separate GitOps repo layout defined; root app syncs child apps; dev namespace deploys via ArgoCD.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 4,8,gitops,"course,sprint-4"
+Task,"TASK ST-20.1 Define GitOps repo layout","Create scalable structure (apps/platform/apps/services/envs) documented for learners.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 4,3,gitops,"course,sprint-4"
+Task,"TASK ST-20.2 Create root application (App-of-Apps)","Root Argo Application points to GitOps repo and syncs child apps.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 4,3,gitops,"course,sprint-4"
+Task,"TASK ST-20.3 Add dev namespace + Argo project boundaries","Dev/prod namespaces + projects; dev auto-sync allowed; prod restricted.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 4,2,gitops,"course,sprint-4"
+
+Story,"ST-13 Terraform bootstrap for staging","AC: state bootstrap + apply reproducible.",,"Epic 2: Terraform Bootstrap: Remote State + IAM + GitHub OIDC",Sprint 5,8,terraform,"course,sprint-5"
+Story,"ST-14 Single CD pipeline + correct smoke tests","AC: pick one pipeline; smoke tests hit correct URLs.",,"Epic 9: CI/CD",Sprint 5,8,cicd,"course,sprint-5"
+Story,"ST-15 Release tagging + promotion","AC: tag triggers prod deploy with approval; rollback documented.",,"Epic 9: CI/CD",Sprint 5,5,cicd,"course,sprint-5"
+
+Story,"ST-21 GitOps-driven staging deploy (CI updates tags)","AC: CI builds/pushes images then updates GitOps repo image tags for dev/staging; ArgoCD sync deploys automatically; traceability documented.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 5,8,gitops,"course,sprint-5"
+Task,"TASK ST-21.1 CI updates GitOps dev tags","Workflow commits updated image tags to GitOps repo (dev).",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 5,3,gitops,"course,sprint-5"
+Task,"TASK ST-21.2 ArgoCD auto-sync for dev","Dev environment auto-sync policy enabled and validated.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 5,2,gitops,"course,sprint-5"
+Task,"TASK ST-21.3 Smoke tests run after sync","Run smoke tests against the gateway after Argo sync completes.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 5,3,cicd,"course,sprint-5"
+
+Story,"ST-16 HTTPS/TLS on gateway","AC: HTTPS enabled; redirect HTTP→HTTPS.",,"Epic 5: Gateway API + Domain: ALB + TLS",Sprint 6,5,k8s,"course,sprint-6"
+Story,"ST-17 Monitoring that actually scrapes","AC: metrics endpoints/monitors aligned; dashboards show traffic.",,"Epic 7: Observability: Prometheus + Grafana (+ Loki optional)",Sprint 6,8,ops,"course,sprint-6"
+Story,"ST-18 Backup + restore drill","AC: run backup and restore rehearsal; verify data.",,"Epic 7: Observability: Prometheus + Grafana (+ Loki optional)",Sprint 6,5,ops,"course,sprint-6"
+
+Story,"ST-22 GitOps production promotion (gated)","AC: production promotion happens via release/tag or promotion PR; requires approval; ArgoCD sync deploys prod; rollback via revert documented.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 6,8,gitops,"course,sprint-6"
+Task,"TASK ST-22.1 Promotion workflow (release/tag)","Create a release/tag-triggered workflow that updates GitOps prod tags (no auto-sync without gate).",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 6,3,gitops,"course,sprint-6"
+Task,"TASK ST-22.2 Prod ArgoCD sync policy","Prod is manual/controlled; document approval and sync steps.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 6,2,gitops,"course,sprint-6"
+Task,"TASK ST-22.3 Rollback drill","Demonstrate rollback by reverting GitOps commit; verify service returns to previous version.",,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)",Sprint 6,3,gitops,"course,sprint-6"

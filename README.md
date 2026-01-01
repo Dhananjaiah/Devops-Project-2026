@@ -35,7 +35,8 @@ All services use MongoDB as the database and communicate via REST APIs.
 │   ├── deployments/         # Service deployments
 │   ├── services/            # Service exposures
 │   ├── configmaps/          # Configuration and secrets
-│   ├── ingress/             # Ingress configuration
+│   ├── gateway/             # Gateway API routing
+│   ├── ingress/             # (Deprecated) Ingress configuration
 │   └── databases/           # Database deployments
 └── README.md
 ```
@@ -59,29 +60,24 @@ eksctl create cluster \
 
 This will take 10-15 minutes. Once complete, your kubectl context will be automatically configured.
 
-### 2. Install AWS Load Balancer Controller
+### 2. Install a Gateway API Controller (Envoy Gateway)
+
+Kubernetes Gateway API requires a controller (implementation). This repo uses **Envoy Gateway**.
+
+Install Envoy Gateway (includes Gateway API CRDs) and wait for it to become available:
 
 ```bash
-# Install AWS Load Balancer Controller for Ingress
-kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller//crds?ref=master"
-
-# Create IAM policy and service account
-eksctl create iamserviceaccount \
-  --cluster=ecommerce-cluster \
-  --namespace=kube-system \
-  --name=aws-load-balancer-controller \
-  --attach-policy-arn=arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess \
-  --approve
-
-# Install the controller
-helm repo add eks https://aws.github.io/eks-charts
-helm repo update
-helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
-  -n kube-system \
-  --set clusterName=ecommerce-cluster \
-  --set serviceAccount.create=false \
-  --set serviceAccount.name=aws-load-balancer-controller
+helm install eg oci://docker.io/envoyproxy/gateway-helm --version v1.6.1 -n envoy-gateway-system --create-namespace
+kubectl wait --timeout=5m -n envoy-gateway-system deployment/envoy-gateway --for=condition=Available
 ```
+
+Then apply this repo’s Gateway API routes:
+
+```bash
+kubectl apply -f k8s/gateway/gateway.yaml
+```
+
+Note: In environments without a LoadBalancer implementation, you may need MetalLB or use `kubectl port-forward` to reach the Gateway.
 
 ### 3. Build and Push Docker Images
 
@@ -140,8 +136,8 @@ kubectl apply -f k8s/configmaps/
 kubectl apply -f k8s/deployments/
 kubectl apply -f k8s/services/
 
-# Deploy Ingress
-kubectl apply -f k8s/ingress/ingress.yaml
+# Deploy Gateway API routes
+kubectl apply -f k8s/gateway/gateway.yaml
 ```
 
 ### 5. Verify Deployment
@@ -156,13 +152,13 @@ kubectl get pods -n ecommerce
 # Check services
 kubectl get svc -n ecommerce
 
-# Get Ingress URL
-kubectl get ingress -n ecommerce
+# Gateway resources
+kubectl get gateway,httproute -n ecommerce
 ```
 
 ## API Endpoints
 
-Once deployed, access the services through the Ingress ALB:
+Once deployed, access the services through the Gateway:
 
 ### Product Service (Port 3001)
 - `GET /api/products` - List all products
@@ -193,11 +189,11 @@ Once deployed, access the services through the Ingress ALB:
 ## Testing the Application
 
 ```bash
-# Get the ALB DNS name
-export ALB_URL=$(kubectl get ingress ecommerce-ingress -n ecommerce -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+Your Gateway controller determines how you get an external URL (LoadBalancer, NodePort, etc).
 
-# Test product service
-curl http://$ALB_URL/api/products
+# Example test (replace with your gateway address)
+export GATEWAY_URL=<your-gateway-url>
+curl http://$GATEWAY_URL/api/products
 
 # Test user registration
 curl -X POST http://$ALB_URL/api/users/register \
@@ -236,7 +232,7 @@ kubectl autoscale deployment product-service --cpu-percent=70 --min=2 --max=10 -
 1. **Update Secrets**: Change the default JWT secret and MongoDB password in `k8s/databases/mongodb.yaml` and `k8s/configmaps/app-secrets.yaml`
 2. **Network Policies**: Implement network policies to restrict pod-to-pod communication
 3. **RBAC**: Configure proper role-based access control
-4. **TLS**: Add TLS certificates to the Ingress for HTTPS (see ingress.yaml comments)
+4. **TLS**: Configure TLS on the Gateway (controller-specific)
 5. **Image Scanning**: Scan Docker images for vulnerabilities before deployment
 6. **Rate Limiting**: Add rate limiting middleware (e.g., express-rate-limit for Node.js) to prevent abuse
 7. **Input Validation**: Add comprehensive input validation for all API endpoints

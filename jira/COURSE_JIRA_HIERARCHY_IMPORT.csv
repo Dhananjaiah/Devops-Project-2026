@@ -1,0 +1,58 @@
+Work Type,Summary,Description,Epic Name,Work item ID,Parent,Sprint,Story Points,Components,Labels
+Epic,"Epic 1: Course Foundation: Repos, Standards, and Trunk-Based Workflow","Course foundation: standards, workflow, protections, docs.","Course Foundation",1,,Sprint 1,,,"course"
+Epic,"Epic 2: Terraform Bootstrap: Remote State + IAM + GitHub OIDC","Remote state + OIDC auth for pipelines.","Terraform Bootstrap",2,,Sprint 5,,,"course"
+Epic,"Epic 4: EKS Cluster Baseline: Managed Node Groups + Autoscaling + Required Add-ons","EKS baseline provisioning + add-ons.","EKS Baseline",3,,Sprint 5,,,"course"
+Epic,"Epic 5: Gateway API + Domain: ALB + TLS","Gateway API routing + TLS/HTTPS.","Gateway API + TLS",4,,Sprint 6,,,"course"
+Epic,"Epic 6: ArgoCD Production Bootstrap + App-of-Apps (Separate GitOps Repo)","GitOps-driven deployments with ArgoCD + App-of-Apps; dev auto-sync and controlled prod promotion.","GitOps + ArgoCD",5,,Sprint 4,,,"course"
+Epic,"Epic 7: Observability: Prometheus + Grafana (+ Loki optional)","Metrics and dashboards that work for real.","Observability",6,,Sprint 6,,,"course"
+Epic,"Epic 8: Walking Skeleton App: Services + UI","App layer: microservices + React UI + Node host.","App + UI",7,,Sprint 3,,,"course"
+Epic,"Epic 9: CI/CD","Per-service CI and staged CD to EKS.","CI/CD",8,,Sprint 5,,,"course"
+Epic,"Epic 10: Automation: One-command Up/Down","Optional automation for platform bring-up/tear-down.","Automation",9,,Sprint 6,,,"course"
+
+Story,"ST-1 Local runbook + demo script","AC: one command start/stop; repeatable journey demo; evidence checklist.",,10,1,Sprint 1,5,docs,"course,sprint-1"
+Sub-task,"TASK ST-1.1 Add demo script skeleton","Create a demo script that runs health + journey calls.",,11,10,Sprint 1,2,docs,"course,sprint-1"
+Sub-task,"TASK ST-1.2 Tighten Quickstart for course","Quickstart becomes the single source of truth.",,12,10,Sprint 1,1,docs,"course,sprint-1"
+Sub-task,"TASK ST-1.3 Add demo evidence template","Template for screenshots + expected outputs.",,13,10,Sprint 1,2,docs,"course,sprint-1"
+
+Story,"ST-2 Make CI honest (remove default skipping)","AC: CI fails when lint/tests not configured; no masking.",,14,8,Sprint 1,5,cicd,"course,sprint-1"
+Sub-task,"TASK ST-2.1 Minimal lint/test baseline per service","Node: eslint + baseline tests; Python: pytest baseline.",,15,14,Sprint 1,2,cicd,"course,sprint-1"
+Sub-task,"TASK ST-2.2 Update ci.yaml gates","Remove 'echo skipping' behavior.",,16,14,Sprint 1,3,cicd,"course,sprint-1"
+
+Story,"ST-4 Mongo auth consistency (compose + k8s)","AC: services connect with creds via env/secrets in both envs.",,17,7,Sprint 2,8,backend,"course,sprint-2"
+Story,"ST-5 Dependency-aware readiness (DB)","AC: readiness fails if Mongo unavailable; no early traffic.",,18,7,Sprint 2,5,backend,"course,sprint-2"
+Story,"ST-6 Fix product ID correctness end-to-end","AC: create→fetch by id→cart→order works reliably.",,19,7,Sprint 2,5,backend,"course,sprint-2"
+
+Story,"ST-7 React UI (Vite) MVP","AC: products/auth/cart/orders; full journey in UI.",,20,7,Sprint 3,13,frontend,"course,sprint-3"
+Story,"ST-8 Node-based UI hosting service","AC: Node/Express serves built SPA + client routing.",,21,7,Sprint 3,5,frontend,"course,sprint-3"
+Story,"ST-9 Wire UI into docker-compose","AC: one command brings up UI + APIs.",,22,7,Sprint 3,3,dev,"course,sprint-3"
+
+Story,"ST-10 Local Kubernetes overlay (kind/minikube)","AC: local k8s works end-to-end with docs.",,23,3,Sprint 4,13,k8s,"course,sprint-4"
+Story,"ST-11 Gateway routing UI + APIs","AC: UI at / and APIs at /api/* through one host.",,24,4,Sprint 4,5,k8s,"course,sprint-4"
+Story,"ST-12 Network policies match gateway reality","AC: policies allow gateway traffic correctly.",,25,3,Sprint 4,3,k8s,"course,sprint-4"
+
+Story,"ST-19 Install ArgoCD (local k8s)","AC: ArgoCD installed in argocd namespace; UI reachable; install is reproducible (official manifests recommended) and documented.",,26,5,Sprint 4,5,gitops,"course,sprint-4"
+Sub-task,"TASK ST-19.1 Add ArgoCD install method + doc","Install ArgoCD via official manifests (version pinned) and document steps for kind/minikube.",,27,26,Sprint 4,2,gitops,"course,sprint-4"
+Sub-task,"TASK ST-19.2 Expose ArgoCD UI for course demo","Port-forward (preferred for local); document access and admin secret handling.",,28,26,Sprint 4,3,gitops,"course,sprint-4"
+
+Story,"ST-20 GitOps repo structure + App-of-Apps bootstrap","AC: Separate GitOps repo layout defined; root app syncs child apps; dev namespace deploys via ArgoCD.",,29,5,Sprint 4,8,gitops,"course,sprint-4"
+Sub-task,"TASK ST-20.1 Define GitOps repo layout","Create scalable structure (apps/platform/apps/services/envs) documented for learners.",,30,29,Sprint 4,3,gitops,"course,sprint-4"
+Sub-task,"TASK ST-20.2 Create root application (App-of-Apps)","Root Argo Application points to GitOps repo and syncs child apps.",,31,29,Sprint 4,3,gitops,"course,sprint-4"
+Sub-task,"TASK ST-20.3 Add dev namespace + Argo project boundaries","Dev/prod namespaces + projects; dev auto-sync allowed; prod restricted.",,32,29,Sprint 4,2,gitops,"course,sprint-4"
+
+Story,"ST-13 Terraform bootstrap for staging","AC: state bootstrap + apply reproducible.",,33,2,Sprint 5,8,terraform,"course,sprint-5"
+Story,"ST-14 Single CD pipeline + correct smoke tests","AC: pick one pipeline; smoke tests hit correct URLs.",,34,8,Sprint 5,8,cicd,"course,sprint-5"
+Story,"ST-15 Release tagging + promotion","AC: tag triggers prod deploy with approval; rollback documented.",,35,8,Sprint 5,5,cicd,"course,sprint-5"
+
+Story,"ST-21 GitOps-driven staging deploy (CI updates tags)","AC: CI builds/pushes images then updates GitOps repo image tags for dev/staging; ArgoCD sync deploys automatically; traceability documented.",,36,5,Sprint 5,8,gitops,"course,sprint-5"
+Sub-task,"TASK ST-21.1 CI updates GitOps dev tags","Workflow commits updated image tags to GitOps repo (dev).",,37,36,Sprint 5,3,gitops,"course,sprint-5"
+Sub-task,"TASK ST-21.2 ArgoCD auto-sync for dev","Dev environment auto-sync policy enabled and validated.",,38,36,Sprint 5,2,gitops,"course,sprint-5"
+Sub-task,"TASK ST-21.3 Smoke tests run after sync","Run smoke tests against the gateway after Argo sync completes.",,39,36,Sprint 5,3,cicd,"course,sprint-5"
+
+Story,"ST-16 HTTPS/TLS on gateway","AC: HTTPS enabled; redirect HTTP→HTTPS.",,40,4,Sprint 6,5,k8s,"course,sprint-6"
+Story,"ST-17 Monitoring that actually scrapes","AC: metrics endpoints/monitors aligned; dashboards show traffic.",,41,6,Sprint 6,8,ops,"course,sprint-6"
+Story,"ST-18 Backup + restore drill","AC: run backup and restore rehearsal; verify data.",,42,6,Sprint 6,5,ops,"course,sprint-6"
+
+Story,"ST-22 GitOps production promotion (gated)","AC: production promotion happens via release/tag or promotion PR; requires approval; ArgoCD sync deploys prod; rollback via revert documented.",,43,5,Sprint 6,8,gitops,"course,sprint-6"
+Sub-task,"TASK ST-22.1 Promotion workflow (release/tag)","Create a release/tag-triggered workflow that updates GitOps prod tags (no auto-sync without gate).",,44,43,Sprint 6,3,gitops,"course,sprint-6"
+Sub-task,"TASK ST-22.2 Prod ArgoCD sync policy","Prod is manual/controlled; document approval and sync steps.",,45,43,Sprint 6,2,gitops,"course,sprint-6"
+Sub-task,"TASK ST-22.3 Rollback drill","Demonstrate rollback by reverting GitOps commit; verify service returns to previous version.",,46,43,Sprint 6,3,gitops,"course,sprint-6"

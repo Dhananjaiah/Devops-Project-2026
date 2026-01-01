@@ -1,0 +1,65 @@
+Issue Type,Summary,Description,Epic Name,Epic Link,Sprint,Story Points,Components,Labels
+Epic,EPIC A - Local Dev & Quality Gates,"Goal: repeatable local dev + honest quality gates (no false-green CI).",EPIC A - Local Dev & Quality Gates,,Sprint 1,,,dev,course
+Epic,EPIC B - Backend Production Hardening,"Goal: backend behaves predictably; config/secrets consistent across environments.",EPIC B - Backend Production Hardening,,Sprint 2,,,backend,course
+Epic,EPIC C - Frontend (React UI + Node Host),"Goal: realistic UI that drives the full e-commerce journey.",EPIC C - Frontend (React UI + Node Host),,Sprint 3,,,frontend,course
+Epic,EPIC D - Kubernetes Prod-like (Local K8s → EKS-ready),"Goal: run the full system on local Kubernetes with Gateway API and config patterns that match EKS.",EPIC D - Kubernetes Prod-like (Local K8s → EKS-ready),,Sprint 4,,,k8s,course
+Epic,EPIC E - AWS Staging/Prod + CI/CD,"Goal: real-world staging deployment pipeline to EKS + safe production release.",EPIC E - AWS Staging/Prod + CI/CD,,Sprint 5,,,cicd,course
+Epic,EPIC F - Observability + Ops (Monitoring/DR),"Goal: metrics/logs/alerts/backups are verifiable; do a restore drill.",EPIC F - Observability + Ops (Monitoring/DR),,Sprint 6,,,ops,course
+
+Story,ST-1 Local runbook + demo script,"As a learner, I can run and demo the full flow locally reliably.\nAC: (1) start/stop commands documented, (2) one scripted demo that validates health + full journey, (3) logs capture steps.",,EPIC A - Local Dev & Quality Gates,Sprint 1,5,docs,"course,sprint-1"
+Task,TASK ST-1.1 Add demo script skeleton,"Create scripts/demo-local.sh that runs health checks + journey calls (register/login/create product/cart/order).",,EPIC A - Local Dev & Quality Gates,Sprint 1,2,docs,"course,sprint-1"
+Task,TASK ST-1.2 Tighten Quickstart for course,"Make QUICKSTART the single source of truth for local demo steps; add a short 'Sprint Review Demo' section.",,EPIC A - Local Dev & Quality Gates,Sprint 1,1,docs,"course,sprint-1"
+Task,TASK ST-1.3 Capture demo evidence template,"Add course/DEMO_EVIDENCE.md template: commands + expected outputs + screenshot checklist.",,EPIC A - Local Dev & Quality Gates,Sprint 1,2,docs,"course,sprint-1"
+
+Story,ST-2 Make CI honest (remove default skipping),"As a maintainer, CI reflects real quality.\nAC: lint/test/format jobs fail when misconfigured; no 'echo skipping' masking failures.",,EPIC A - Local Dev & Quality Gates,Sprint 1,5,cicd,"course,sprint-1"
+Task,TASK ST-2.1 Decide minimal lint/test per service,"Node: eslint + basic test placeholder. Python: ruff/flake8 + pytest baseline.",,EPIC A - Local Dev & Quality Gates,Sprint 1,2,cicd,"course,sprint-1"
+Task,TASK ST-2.2 Update CI workflow gates,"Update .github/workflows/ci.yaml so missing scripts cause failure, not success.",,EPIC A - Local Dev & Quality Gates,Sprint 1,3,cicd,"course,sprint-1"
+
+Story,ST-3 Course Scrum baseline docs (re-baseline sprints),"As a learner, sprint docs match reality.\nAC: add course sprint plan + Jira mapping; clarify that legacy sprint docs are historical.",,EPIC A - Local Dev & Quality Gates,Sprint 1,3,docs,"course,sprint-1"
+Task,TASK ST-3.1 Add course sprint plan doc,"Create course/COURSE_SPRINT_PLAN.md with sprint goals + demos + DoD.",,EPIC A - Local Dev & Quality Gates,Sprint 1,1,docs,"course,sprint-1"
+Task,TASK ST-3.2 Add Jira import instructions,"Create course/JIRA_IMPORT.md: how to import CSV + mapping fields.",,EPIC A - Local Dev & Quality Gates,Sprint 1,2,docs,"course,sprint-1"
+
+Story,ST-4 MongoDB auth consistency (compose + k8s),"As a developer, the same Mongo auth approach works locally and on k8s.\nAC: services connect using credentials via env/secrets in both environments.",,EPIC B - Backend Production Hardening,Sprint 2,8,backend,"course,sprint-2"
+Task,TASK ST-4.1 Choose Mongo auth model,"Decide: enable auth everywhere (recommended) and update compose + service envs.",,EPIC B - Backend Production Hardening,Sprint 2,2,backend,"course,sprint-2"
+Task,TASK ST-4.2 Align docker-compose Mongo + service envs,"Make compose Mongo + microservices use the same connection string pattern.",,EPIC B - Backend Production Hardening,Sprint 2,3,backend,"course,sprint-2"
+Task,TASK ST-4.3 Align k8s secrets + deployments,"Use Secrets for Mongo creds; ensure deployments reference them.",,EPIC B - Backend Production Hardening,Sprint 2,3,k8s,"course,sprint-2"
+
+Story,ST-5 Dependency-aware readiness (DB),"As an operator, readiness reflects DB connectivity.\nAC: readiness fails if Mongo unavailable; services don't accept traffic early.",,EPIC B - Backend Production Hardening,Sprint 2,5,backend,"course,sprint-2"
+Task,TASK ST-5.1 Implement DB ping in /health or /ready,"Add endpoint or adjust readiness handler for all services.",,EPIC B - Backend Production Hardening,Sprint 2,3,backend,"course,sprint-2"
+Task,TASK ST-5.2 Update k8s readinessProbe paths,"Ensure probes use correct endpoints.",,EPIC B - Backend Production Hardening,Sprint 2,2,k8s,"course,sprint-2"
+
+Story,ST-6 Fix product ID correctness end-to-end,"As a user, created product IDs work across fetch/cart/order.\nAC: GET/PUT/DELETE by id works reliably; cart/order uses correct ids.",,EPIC B - Backend Production Hardening,Sprint 2,5,backend,"course,sprint-2"
+
+Story,ST-7 Create React UI (Vite) MVP,"As a user, I can complete the full journey in a UI.\nAC: products list/create, register/login, cart view/add, place order, orders view.",,EPIC C - Frontend (React UI + Node Host),Sprint 3,13,frontend,"course,sprint-3"
+Task,TASK ST-7.1 Scaffold Vite React app,"Create frontend app with routing + API client.",,EPIC C - Frontend (React UI + Node Host),Sprint 3,3,frontend,"course,sprint-3"
+Task,TASK ST-7.2 Implement pages (products/auth/cart/orders),"Build minimal UI pages for course demo.",,EPIC C - Frontend (React UI + Node Host),Sprint 3,8,frontend,"course,sprint-3"
+Task,TASK ST-7.3 Token handling,"Store token (localStorage) and attach Authorization header when needed.",,EPIC C - Frontend (React UI + Node Host),Sprint 3,2,frontend,"course,sprint-3"
+
+Story,ST-8 Node-based UI hosting service,"As an operator, the UI runs as a Node service container.\nAC: Node/Express serves built SPA + supports client-side routing.",,EPIC C - Frontend (React UI + Node Host),Sprint 3,5,frontend,"course,sprint-3"
+Task,TASK ST-8.1 Add Express static host,"Create microservices/frontend-service (Node) that serves dist/.",,EPIC C - Frontend (React UI + Node Host),Sprint 3,3,frontend,"course,sprint-3"
+Task,TASK ST-8.2 Containerize UI host,"Dockerfile builds UI and serves via Node container.",,EPIC C - Frontend (React UI + Node Host),Sprint 3,2,frontend,"course,sprint-3"
+
+Story,ST-9 Wire UI into docker-compose,"As a learner, one command brings up UI + APIs.\nAC: docker compose exposes UI on localhost (e.g. 3000) and it can call APIs.",,EPIC C - Frontend (React UI + Node Host),Sprint 3,3,dev,"course,sprint-3"
+
+Story,ST-10 Local Kubernetes overlay (kind/minikube),"As a learner, I can run the whole stack on local k8s.\nAC: storage + gateway routing work locally; docs included.",,EPIC D - Kubernetes Prod-like (Local K8s → EKS-ready),Sprint 4,13,k8s,"course,sprint-4"
+Task,TASK ST-10.1 Create k8s overlays,"Add k8s/overlays/local with storageClass and gateway controller assumptions.",,EPIC D - Kubernetes Prod-like (Local K8s → EKS-ready),Sprint 4,8,k8s,"course,sprint-4"
+Task,TASK ST-10.2 Update course docs for local k8s,"Add course/LOCAL_K8S.md: kind/minikube steps.",,EPIC D - Kubernetes Prod-like (Local K8s → EKS-ready),Sprint 4,5,docs,"course,sprint-4"
+
+Story,ST-11 Gateway routing UI + APIs,"As a user, UI at / and APIs at /api/* work through Gateway API.\nAC: end-to-end through one host.",,EPIC D - Kubernetes Prod-like (Local K8s → EKS-ready),Sprint 4,5,k8s,"course,sprint-4"
+
+Story,ST-12 Network policies that match gateway reality,"As an operator, network policies don't break gateway traffic.\nAC: policies allow gateway-controller namespace/labels correctly.",,EPIC D - Kubernetes Prod-like (Local K8s → EKS-ready),Sprint 4,3,k8s,"course,sprint-4"
+
+Story,ST-13 Terraform bootstrap for staging,"As a devops engineer, I can provision staging infra reproducibly.\nAC: state bootstrap documented; terraform apply works end-to-end.",,EPIC E - AWS Staging/Prod + CI/CD,Sprint 5,8,terraform,"course,sprint-5"
+
+Story,ST-14 Single CD pipeline + correct smoke tests,"As a maintainer, deployments are automated and validated.\nAC: choose one pipeline; smoke tests hit correct health URLs.",,EPIC E - AWS Staging/Prod + CI/CD,Sprint 5,8,cicd,"course,sprint-5"
+Task,TASK ST-14.1 Decide workflow owner (cd vs deploy),"Pick cd.yaml as primary and retire/disable deploy.yaml (or vice versa).",,EPIC E - AWS Staging/Prod + CI/CD,Sprint 5,2,cicd,"course,sprint-5"
+Task,TASK ST-14.2 Fix smoke test URL paths,"Update to call /health correctly through gateway strategy.",,EPIC E - AWS Staging/Prod + CI/CD,Sprint 5,3,cicd,"course,sprint-5"
+Task,TASK ST-14.3 Align gateway paths + health strategy,"Option A: keep /health direct per service; Option B: add /api/*/health routes.",,EPIC E - AWS Staging/Prod + CI/CD,Sprint 5,3,k8s,"course,sprint-5"
+
+Story,ST-15 Release tagging + promotion (staging→prod),"As a devops engineer, releases are reproducible and rollbackable.\nAC: tag triggers prod deploy with approval; rollback documented.",,EPIC E - AWS Staging/Prod + CI/CD,Sprint 5,5,cicd,"course,sprint-5"
+
+Story,ST-16 HTTPS/TLS on gateway (EKS),"As a user, traffic is encrypted.\nAC: HTTPS enabled with ACM; HTTP redirects to HTTPS.",,EPIC F - Observability + Ops (Monitoring/DR),Sprint 6,5,k8s,"course,sprint-6"
+
+Story,ST-17 Metrics/monitoring that actually scrapes,"As an operator, Prometheus scrapes services and dashboards show traffic.\nAC: services expose /metrics OR monitors updated; service ports named appropriately.",,EPIC F - Observability + Ops (Monitoring/DR),Sprint 6,8,ops,"course,sprint-6"
+
+Story,ST-18 Backup + restore drill,"As an operator, I can restore Mongo from backup.\nAC: run backup job, restore into fresh DB, verify data.",,EPIC F - Observability + Ops (Monitoring/DR),Sprint 6,5,ops,"course,sprint-6"

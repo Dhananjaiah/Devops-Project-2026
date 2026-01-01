@@ -15,17 +15,18 @@ build:
 	docker build -t user-service:latest ./microservices/user-service
 	docker build -t cart-service:latest ./microservices/cart-service
 	docker build -t order-service:latest ./microservices/order-service
+	docker build -t ui:latest ./microservices/ui
 
 local:
 	@echo "Starting services locally..."
-	docker-compose up -d
+	docker compose up -d --build
 
 local-down:
 	@echo "Stopping local services..."
-	docker-compose down
+	docker compose down
 
 local-logs:
-	docker-compose logs -f
+	docker compose logs -f
 
 push:
 	@echo "Pushing images to ECR..."
@@ -59,4 +60,4 @@ clean:
 
 test:
 	@echo "Testing services..."
-	./scripts/test-services.sh
+	bash ./scripts/test-services.sh

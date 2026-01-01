@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongodb-connection
+  namespace: ecommerce
+type: Opaque
+data:
+  # mongodb://admin:password123@mongodb:27017/ecommerce?authSource=admin
+  mongo-url: bW9uZ29kYjovL2FkbWluOnBhc3N3b3JkMTIzQG1vbmdvZGI6MjcwMTcvZWNvbW1lcmNlP2F1dGhTb3VyY2U9YWRtaW4=

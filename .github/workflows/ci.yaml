@@ -23,23 +23,23 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
-        cache-dependency-path: microservices/${{ matrix.service }}/package-lock.json
+        cache-dependency-path: microservices/${{ matrix.service }}/package.json
     
     - name: Install dependencies
       working-directory: microservices/${{ matrix.service }}
-      run: npm ci
+      run: npm install
     
     - name: Run linting
       working-directory: microservices/${{ matrix.service }}
-      run: npm run lint || echo "Linting not configured, skipping..."
+      run: npm run lint
     
     - name: Run tests
       working-directory: microservices/${{ matrix.service }}
-      run: npm test || echo "Tests not configured, skipping..."
+      run: npm test
     
     - name: Check code formatting
       working-directory: microservices/${{ matrix.service }}
-      run: npm run format:check || echo "Formatting check not configured, skipping..."
+      run: npm run format:check
 
   lint-and-test-python:
     name: Lint and Test Python Services
@@ -68,19 +68,19 @@ jobs:
     
     - name: Run linting with flake8
       working-directory: microservices/${{ matrix.service }}
-      run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || echo "Linting not strict, continuing..."
+      run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
     
     - name: Run linting with pylint
       working-directory: microservices/${{ matrix.service }}
-      run: pylint *.py --disable=all --enable=E,F || echo "Pylint not strict, continuing..."
+      run: pylint *.py --disable=all --enable=E,F
     
     - name: Check code formatting with black
       working-directory: microservices/${{ matrix.service }}
-      run: black --check . || echo "Formatting check not strict, continuing..."
+      run: black --check .
     
     - name: Run tests
       working-directory: microservices/${{ matrix.service }}
-      run: pytest -v --cov=. --cov-report=xml || echo "Tests not configured, skipping..."
+      run: pytest -v --cov=. --cov-report=xml
 
   build-docker-images:
     name: Build Docker Images
@@ -105,10 +105,6 @@ jobs:
         tags: ${{ matrix.service }}:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-    
-    - name: Test Docker image
-      run: |
-        docker run --rm ${{ matrix.service }}:${{ github.sha }} --version || echo "Version check not available"
 
   security-scan:
     name: Security Scanning
@@ -152,7 +148,7 @@ jobs:
     
     - name: Validate Kubernetes manifests
       run: |
-        find k8s -name "*.yaml" -type f | xargs kubeval --ignore-missing-schemas || echo "Validation completed with warnings"
+        find k8s -name "*.yaml" -type f | xargs kubeval --ignore-missing-schemas
 
   ci-success:
     name: CI Pipeline Success
