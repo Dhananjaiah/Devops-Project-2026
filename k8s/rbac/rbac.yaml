@@ -1,0 +1,82 @@
+# RBAC (Role-Based Access Control) Configuration
+# Provides fine-grained access control for service accounts
+
+# Service Account for microservices
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ecommerce-service-account
+  namespace: ecommerce
+---
+# Role for microservices (limited permissions)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ecommerce-service-role
+  namespace: ecommerce
+rules:
+# Allow reading ConfigMaps
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list"]
+# Allow reading Secrets
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+# Allow reading Services (for service discovery)
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+# Allow reading own Pod information
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+---
+# RoleBinding to bind the role to the service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ecommerce-service-rolebinding
+  namespace: ecommerce
+subjects:
+- kind: ServiceAccount
+  name: ecommerce-service-account
+  namespace: ecommerce
+roleRef:
+  kind: Role
+  name: ecommerce-service-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Service Account for MongoDB (more restricted)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mongodb-service-account
+  namespace: ecommerce
+---
+# Role for MongoDB (minimal permissions)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mongodb-role
+  namespace: ecommerce
+rules:
+# Allow reading own Pod information only
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get"]
+---
+# RoleBinding for MongoDB
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mongodb-rolebinding
+  namespace: ecommerce
+subjects:
+- kind: ServiceAccount
+  name: mongodb-service-account
+  namespace: ecommerce
+roleRef:
+  kind: Role
+  name: mongodb-role
+  apiGroup: rbac.authorization.k8s.io
