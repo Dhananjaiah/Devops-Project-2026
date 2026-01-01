@@ -39,9 +39,9 @@ MongoClient.connect(MONGO_URL)
 
 // Validation middleware
 const validateProduct = [
-  body('name').optional().trim().isLength({ min: 1, max: 200 }).withMessage('Name must be 1-200 characters'),
+  body('name').trim().notEmpty().withMessage('Name is required').isLength({ min: 1, max: 200 }).withMessage('Name must be 1-200 characters'),
   body('description').optional().trim().isLength({ max: 1000 }).withMessage('Description must be max 1000 characters'),
-  body('price').optional().isFloat({ min: 0 }).withMessage('Price must be a positive number'),
+  body('price').notEmpty().withMessage('Price is required').isFloat({ min: 0 }).withMessage('Price must be a positive number'),
   body('category').optional().trim().isLength({ min: 1, max: 100 }).withMessage('Category must be 1-100 characters'),
   body('stock').optional().isInt({ min: 0 }).withMessage('Stock must be a non-negative integer'),
   body('imageUrl').optional().trim().isURL().withMessage('Image URL must be valid'),
@@ -111,12 +111,6 @@ app.get('/api/products/:id', validateProductId, handleValidationErrors, async (r
 app.post('/api/products', validateProduct, handleValidationErrors, async (req, res) => {
   try {
     const product = req.body;
-    
-    // Sanitize and validate
-    if (!product.name || !product.price) {
-      return res.status(400).json({ error: 'Name and price are required' });
-    }
-    
     const result = await db.collection('products').insertOne(product);
     res.status(201).json({ id: result.insertedId, ...product });
   } catch (err) {

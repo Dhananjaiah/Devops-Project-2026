@@ -43,10 +43,10 @@ def validate_json(*expected_fields):
         return decorated_function
     return decorator
 
-# Input sanitization
+# Input sanitization with validation
 def sanitize_string(value, max_length=200):
     if not isinstance(value, str):
-        return ''
+        raise ValueError(f'Expected string, got {type(value).__name__}')
     return value.strip()[:max_length]
 
 @app.route('/health', methods=['GET'])
