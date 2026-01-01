@@ -1,14 +1,25 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from pymongo import MongoClient
 from bson import ObjectId
 import os
 import bcrypt
 import jwt
 from datetime import datetime, timedelta
+from functools import wraps
 
 app = Flask(__name__)
 CORS(app)
+
+# Rate limiting configuration
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
 
 MONGO_URL = os.getenv('MONGO_URL', 'mongodb://mongodb:27017')
 DB_NAME = 'ecommerce'
@@ -17,20 +28,48 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-change-in-production')
 client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
 
+# Input validation decorator
+def validate_json(*expected_fields):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not request.is_json:
+                return jsonify({'error': 'Content-Type must be application/json'}), 400
+            data = request.json
+            for field in expected_fields:
+                if field not in data or not data[field]:
+                    return jsonify({'error': f'{field} is required'}), 400
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+# Input sanitization
+def sanitize_string(value, max_length=200):
+    if not isinstance(value, str):
+        return ''
+    return value.strip()[:max_length]
+
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'healthy', 'service': 'user-service'})
 
 @app.route('/api/users/register', methods=['POST'])
+@limiter.limit("5 per hour")
+@validate_json('email', 'password')
 def register():
     try:
         data = request.json
-        email = data.get('email')
+        email = sanitize_string(data.get('email'), 100)
         password = data.get('password')
-        name = data.get('name')
+        name = sanitize_string(data.get('name', ''), 100)
         
-        if not email or not password:
-            return jsonify({'error': 'Email and password required'}), 400
+        # Validate email format
+        if '@' not in email or len(email) < 3:
+            return jsonify({'error': 'Invalid email format'}), 400
+        
+        # Validate password strength
+        if len(password) < 8:
+            return jsonify({'error': 'Password must be at least 8 characters'}), 400
         
         # Check if user already exists
         if db.users.find_one({'email': email}):
@@ -57,14 +96,13 @@ def register():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/users/login', methods=['POST'])
+@limiter.limit("10 per hour")
+@validate_json('email', 'password')
 def login():
     try:
         data = request.json
-        email = data.get('email')
+        email = sanitize_string(data.get('email'), 100)
         password = data.get('password')
-        
-        if not email or not password:
-            return jsonify({'error': 'Email and password required'}), 400
         
         # Find user
         user = db.users.find_one({'email': email})
@@ -94,6 +132,7 @@ def login():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/users/profile', methods=['GET'])
+@limiter.limit("30 per hour")
 def get_profile():
     try:
         # Get token from header

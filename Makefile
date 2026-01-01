@@ -35,11 +35,15 @@ push:
 deploy:
 	@echo "Deploying to EKS..."
 	kubectl apply -f k8s/namespaces/
+	kubectl apply -f k8s/rbac/
 	kubectl apply -f k8s/databases/
 	kubectl apply -f k8s/configmaps/
 	kubectl apply -f k8s/deployments/
 	kubectl apply -f k8s/services/
 	kubectl apply -f k8s/ingress/
+	kubectl apply -f k8s/autoscaling/
+	kubectl apply -f k8s/network-policies/
+	kubectl apply -f k8s/backup/
 
 status:
 	@echo "Checking deployment status..."

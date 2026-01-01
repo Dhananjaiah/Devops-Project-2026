@@ -1,0 +1,147 @@
+# MongoDB Backup CronJob
+# Backs up MongoDB database daily at 2 AM
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongodb-backup-script
+  namespace: ecommerce
+data:
+  backup.sh: |
+    #!/bin/bash
+    set -e
+    
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    BACKUP_DIR="/backup/mongodb-${TIMESTAMP}"
+    
+    echo "Starting MongoDB backup at ${TIMESTAMP}"
+    
+    # Create backup directory
+    mkdir -p ${BACKUP_DIR}
+    
+    # Perform backup using mongodump
+    mongodump --host=mongodb:27017 \
+              --db=ecommerce \
+              --out=${BACKUP_DIR} \
+              --username=${MONGO_USERNAME} \
+              --password=${MONGO_PASSWORD} \
+              --authenticationDatabase=admin
+    
+    # Compress backup
+    tar -czf /backup/mongodb-${TIMESTAMP}.tar.gz -C /backup mongodb-${TIMESTAMP}
+    
+    # Remove uncompressed backup
+    rm -rf ${BACKUP_DIR}
+    
+    echo "Backup completed: mongodb-${TIMESTAMP}.tar.gz"
+    
+    # Keep only last 7 days of backups
+    find /backup -name "mongodb-*.tar.gz" -mtime +7 -delete
+    
+    echo "Old backups cleaned up"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-backup-pvc
+  namespace: ecommerce
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: gp2
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mongodb-backup
+  namespace: ecommerce
+spec:
+  # Run daily at 2 AM
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: mongodb-backup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: mongodb-backup
+            image: mongo:6.0
+            command:
+            - /bin/bash
+            - /scripts/backup.sh
+            env:
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: username
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: password
+            volumeMounts:
+            - name: backup-volume
+              mountPath: /backup
+            - name: backup-script
+              mountPath: /scripts
+          volumes:
+          - name: backup-volume
+            persistentVolumeClaim:
+              claimName: mongodb-backup-pvc
+          - name: backup-script
+            configMap:
+              name: mongodb-backup-script
+              defaultMode: 0755
+---
+# Manual backup job (can be triggered on-demand)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongodb-manual-backup
+  namespace: ecommerce
+spec:
+  template:
+    metadata:
+      labels:
+        app: mongodb-backup
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: mongodb-backup
+        image: mongo:6.0
+        command:
+        - /bin/bash
+        - /scripts/backup.sh
+        env:
+        - name: MONGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: username
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: password
+        volumeMounts:
+        - name: backup-volume
+          mountPath: /backup
+        - name: backup-script
+          mountPath: /scripts
+      volumes:
+      - name: backup-volume
+        persistentVolumeClaim:
+          claimName: mongodb-backup-pvc
+      - name: backup-script
+        configMap:
+          name: mongodb-backup-script
+          defaultMode: 0755
