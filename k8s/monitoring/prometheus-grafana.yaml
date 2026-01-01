@@ -1,0 +1,189 @@
+# Prometheus and Grafana Setup Guide
+# This file provides instructions for setting up monitoring
+
+---
+# Namespace for monitoring
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+---
+# Install Prometheus using Helm
+# Run the following commands:
+#
+# helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+# helm repo update
+# helm install prometheus prometheus-community/kube-prometheus-stack \
+#   --namespace monitoring \
+#   --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
+#   --set grafana.adminPassword=admin-password-change-me
+
+---
+# ServiceMonitor for Product Service
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: product-service-monitor
+  namespace: ecommerce
+  labels:
+    app: product-service
+spec:
+  selector:
+    matchLabels:
+      app: product-service
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+---
+# ServiceMonitor for User Service
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: user-service-monitor
+  namespace: ecommerce
+  labels:
+    app: user-service
+spec:
+  selector:
+    matchLabels:
+      app: user-service
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+---
+# ServiceMonitor for Cart Service
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cart-service-monitor
+  namespace: ecommerce
+  labels:
+    app: cart-service
+spec:
+  selector:
+    matchLabels:
+      app: cart-service
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+---
+# ServiceMonitor for Order Service
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: order-service-monitor
+  namespace: ecommerce
+  labels:
+    app: order-service
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+---
+# PrometheusRule for alerting
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ecommerce-alerts
+  namespace: ecommerce
+spec:
+  groups:
+  - name: ecommerce-services
+    interval: 30s
+    rules:
+    - alert: ServiceDown
+      expr: up{job=~"product-service|user-service|cart-service|order-service"} == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Service {{ $labels.job }} is down"
+        description: "Service {{ $labels.job }} has been down for more than 5 minutes."
+    
+    - alert: HighErrorRate
+      expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High error rate on {{ $labels.job }}"
+        description: "Error rate is above 5% for {{ $labels.job }}"
+    
+    - alert: HighResponseTime
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High response time on {{ $labels.job }}"
+        description: "95th percentile response time is above 1 second"
+    
+    - alert: HighMemoryUsage
+      expr: container_memory_usage_bytes{namespace="ecommerce"} / container_spec_memory_limit_bytes{namespace="ecommerce"} > 0.9
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage for {{ $labels.pod }}"
+        description: "Memory usage is above 90% for pod {{ $labels.pod }}"
+    
+    - alert: HighCPUUsage
+      expr: rate(container_cpu_usage_seconds_total{namespace="ecommerce"}[5m]) > 0.8
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage for {{ $labels.pod }}"
+        description: "CPU usage is above 80% for pod {{ $labels.pod }}"
+    
+    - alert: PodCrashLooping
+      expr: rate(kube_pod_container_status_restarts_total{namespace="ecommerce"}[15m]) > 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Pod {{ $labels.pod }} is crash looping"
+        description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes"
+---
+# Grafana Dashboard ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ecommerce-dashboard
+  namespace: monitoring
+data:
+  ecommerce-overview.json: |
+    {
+      "dashboard": {
+        "title": "E-Commerce Microservices Overview",
+        "panels": [
+          {
+            "title": "Request Rate",
+            "targets": [{"expr": "rate(http_requests_total[5m])"}]
+          },
+          {
+            "title": "Error Rate",
+            "targets": [{"expr": "rate(http_requests_total{status=~\"5..\"}[5m])"}]
+          },
+          {
+            "title": "Response Time (95th percentile)",
+            "targets": [{"expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))"}]
+          },
+          {
+            "title": "CPU Usage",
+            "targets": [{"expr": "rate(container_cpu_usage_seconds_total{namespace=\"ecommerce\"}[5m])"}]
+          },
+          {
+            "title": "Memory Usage",
+            "targets": [{"expr": "container_memory_usage_bytes{namespace=\"ecommerce\"}"}]
+          },
+          {
+            "title": "Pod Count",
+            "targets": [{"expr": "count(kube_pod_info{namespace=\"ecommerce\"})"}]
+          }
+        ]
+      }
+    }
