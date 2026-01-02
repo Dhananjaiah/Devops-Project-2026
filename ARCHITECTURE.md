@@ -1,4 +1,40 @@
-# Architecture Overview
+## System Context Diagram
+
+```mermaid
+graph TD
+    User([User]) -->|HTTP/HTTPS| Gateway[Envoy Gateway]
+    
+    subgraph EKS Cluster
+        Gateway -->|/api/products| Product[Product Service]
+        Gateway -->|/api/users| UserSvc[User Service]
+        Gateway -->|/api/cart| Cart[Cart Service]
+        Gateway -->|/api/orders| Order[Order Service]
+        
+        Product --> Mongo[(MongoDB)]
+        UserSvc --> Mongo
+        Cart --> Mongo
+        Order --> Mongo
+        
+        Order -->|Get User Profile| UserSvc
+        Order -->|Get Cart Items| Cart
+        Order -->|Verify Product| Product
+    end
+```
+
+## DevOps Workflow
+
+```mermaid
+flowchart LR
+    Dev[Developer] -->|1. Commit Code| Git[GitHub]
+    Git -->|2. Trigger| CI[GitHub Actions]
+    CI -->|3. Build & Test| Docker[Build Image]
+    Docker -->|4. Push| ECR[AWS ECR]
+    
+    subgraph CD [Continuous Deployment]
+        GitOps[ArgoCD] -->|5. Detect Change| Git
+        GitOps -->|6. Sync| K8s[EKS Cluster]
+    end
+```
 
 ## System Architecture
 

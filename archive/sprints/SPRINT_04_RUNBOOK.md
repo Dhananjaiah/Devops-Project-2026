@@ -91,12 +91,38 @@ UI-at-`/` validation (once UI is routed through gateway):
 
 ---
 
-## F) GitOps steps (ArgoCD + Kustomize) — to be implemented
-When Sprint 4 GitOps implementation is added, this runbook should be extended with:
-- Create `k8s/base` + `k8s/overlays/local` (Kustomize)
-- Install ArgoCD via official manifests
-- Bootstrap App-of-Apps
-- Verify all apps are Healthy/Synced
+## F) GitOps steps (ArgoCD + App-of-Apps)
+Now that we have local Kubernetes running, let's enable GitOps.
+
+1.  **Install ArgoCD**
+    ```bash
+    kubectl create namespace argocd
+    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+    ```
+
+2.  **Wait for ArgoCD to be ready**
+    ```bash
+    kubectl wait --for=condition=Available deployment/argocd-server -n argocd --timeout=300s
+    ```
+
+3.  **Apply the Root Application**
+    This tells ArgoCD to look at *this* repository and deploy everything else.
+    ```bash
+    kubectl apply -f k8s/argocd/root-app.yaml
+    ```
+
+4.  **Verify Synchronization**
+    ArgoCD will now sync:
+    - Namespace (`ecommerce`)
+    - Databases (`k8s/databases`)
+    - Configs (`k8s/configmaps`)
+    - Services (`k8s/deployments`)
+
+    Check status:
+    ```bash
+    kubectl get applications -n argocd
+    ```
+    All apps should eventually show `Synced` and `Healthy`.
 
 ---
 

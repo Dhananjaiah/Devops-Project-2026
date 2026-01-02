@@ -1,0 +1,24 @@
+graph TD
+    User([User]) -->|HTTP/HTTPS| Gateway[Envoy Gateway]
+    
+    subgraph EKS Cluster
+        Gateway -->|/api/products| Product[Product Service]
+        Gateway -->|/api/users| UserSvc[User Service]
+        Gateway -->|/api/cart| Cart[Cart Service]
+        Gateway -->|/api/orders| Order[Order Service]
+        
+        Product --> Mongo[(MongoDB)]
+        UserSvc --> Mongo
+        Cart --> Mongo
+        Order --> Mongo
+        
+        Order -->|Get User Profile| UserSvc
+        Order -->|Get Cart Items| Cart
+        Order -->|Verify Product| Product
+    end
+
+    subgraph "External"
+        Dev[Developer] -->|git push| GitHub[GitHub Repo]
+        GitHub -->|Webhook| ArgoCD[ArgoCD]
+        ArgoCD -->|Sync| EKS[EKS Cluster]
+    end
